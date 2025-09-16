@@ -1,11 +1,12 @@
 streamlit
 pandas
 numpy
-opencv-python
+opencv-python-headless
 pydicom
 tqdm
 tensorflow
 scikit-learn
 matplotlib
+
 
 

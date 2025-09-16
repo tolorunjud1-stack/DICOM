@@ -13,20 +13,15 @@ import pandas as pd
 from datetime import datetime
 import pytz
 
-
 # ==============================
-# CONFIG (relative paths for Streamlit Cloud)
+# CONFIG
 # ==============================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # folder where app.py is
+BASE_DIR = r"C:\Users\tolorunjud1\Desktop\DICOM1"
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 RESULTS_DIR = os.path.join(BASE_DIR, "processed")
 LOGO_PATH = os.path.join(BASE_DIR, "logo.png")
-MODEL_PATH = os.path.join(BASE_DIR, "cnn_model.h5")
-
-# Create folders if missing
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
-
 
 # ==============================
 # STREAMLIT CONFIG
@@ -301,4 +296,3 @@ We combine **Multi-Scale Local Binary Patterns (MSLBP)** for robust texture enco
 """)
 
     st.markdown("<div class='footer'>© 2025 Tolorunju Adedeji | MSc Project</div>", unsafe_allow_html=True)
-

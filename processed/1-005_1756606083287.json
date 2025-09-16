@@ -1,0 +1,19 @@
+{
+  "file_name": "1-005.dcm",
+  "label": "HBV Positive",
+  "confidence": 0.502657,
+  "metadata": {
+    "Patient ID": "CRLM-CT-1001",
+    "Patient Name": "CRLM-CT-1001",
+    "Modality": "CT",
+    "Study Date": "19920606",
+    "Rows": 512,
+    "Columns": 512
+  },
+  "model_input": {
+    "H": 224,
+    "W": 224,
+    "C": 1
+  },
+  "timestamp": 1756606083287
+}

@@ -1,0 +1,13 @@
+
+step 1: Download folder in your desktop
+step 2: Open command prompt and install streamlit
+>>>> pip install streamlit
+
+
+Open command prompt and enter correct path
+---->>>>>> cd "C:\Users\tolorunjud1\Desktop\DICOM1"
+
+then run
+----->>>>> streamlit run app.py
+
+

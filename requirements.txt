@@ -7,4 +7,3 @@ tqdm
 tensorflow
 scikit-learn
 matplotlib
-

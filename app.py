@@ -12,6 +12,45 @@ from pydicom.pixel_data_handlers.util import apply_voi_lut
 import pandas as pd
 from datetime import datetime
 import pytz
+import gdown
+
+# ... earlier parts of code ...
+
+# CONFIG (modified)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "cnn_model.h5")
+
+# Google Drive URL (fuzzy or direct)
+GDRIVE_LINK = "https://drive.google.com/file/d/1IW30NLnaspApbBo9E6q3iFsw0FEMkx16/view?usp=drive_link"
+# or direct
+GDRIVE_DIRECT = "https://drive.google.com/uc?export=download&id=1IW30NLnaspApbBo9E6q3iFsw0FEMkx16"
+
+# Download model if it doesn't exist
+if not os.path.exists(MODEL_PATH):
+    st.info("Downloading model from Google Drive...")
+    # You can use fuzzy for the shared link form
+    gdown.download(GDRIVE_LINK, MODEL_PATH, fuzzy=True, quiet=False)
+    # Or use direct if needed
+    # gdown.download(GDRIVE_DIRECT, MODEL_PATH, quiet=False)
+
+# Now load the model
+from tensorflow.keras.models import load_model
+
+def load_mslbp_model(path: str):
+    try:
+        model = load_model(path)
+        return model, None
+    except Exception as e:
+        return None, str(e)
+
+model, model_err = load_mslbp_model(MODEL_PATH)
+
+# … rest of your code …
+
+
+
+
+
 
 # ==============================
 # CONFIG
@@ -296,4 +335,5 @@ We combine **Multi-Scale Local Binary Patterns (MSLBP)** for robust texture enco
 """)
 
     st.markdown("<div class='footer'>© 2025 Tolorunju Adedeji | MSc Project</div>", unsafe_allow_html=True)
+
 

@@ -16,7 +16,7 @@ import pytz
 # ==============================
 # CONFIG
 # ==============================
-BASE_DIR = r"C:\Users\tolorunjud1\Desktop\DICOM1"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 RESULTS_DIR = os.path.join(BASE_DIR, "processed")
 LOGO_PATH = os.path.join(BASE_DIR, "logo.png")
@@ -296,3 +296,4 @@ We combine **Multi-Scale Local Binary Patterns (MSLBP)** for robust texture enco
 """)
 
     st.markdown("<div class='footer'>© 2025 Tolorunju Adedeji | MSc Project</div>", unsafe_allow_html=True)
+

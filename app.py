@@ -12,27 +12,7 @@ import datetime
 # ==============================
 # APP CONFIG
 # ==============================
-st.set_page_config(page_title="HBV Detection App", layout="wide")
-
-# Add background logo (PowerClip style)
-def add_bg_from_local(image_file):
-    with open(image_file, "rb") as f:
-        data = f.read()
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image: url("data:image/png;base64,{data.encode('base64').decode()}");
-            background-size: 300px;
-            background-repeat: no-repeat;
-            background-position: center;
-            background-attachment: fixed;
-            opacity: 0.1;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+st.set_page_config(page_title="HBV Detection App", 
 
 # Call background (replace with your actual logo file path)
 if os.path.exists("logo.png"):  # <-- ensure you have your logo saved as logo.png
@@ -215,3 +195,4 @@ elif page == "About":
     It is **not certified for clinical or diagnostic use**. Always consult a licensed medical professional 
     for health-related decisions.  
     """)
+

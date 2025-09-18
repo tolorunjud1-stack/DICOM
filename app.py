@@ -14,6 +14,45 @@ import datetime
 # ==============================
 st.set_page_config(page_title="HBV Detection App", layout="wide")
 
+# Add background logo (PowerClip style)
+def add_bg_from_local(image_file):
+    with open(image_file, "rb") as f:
+        data = f.read()
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url("data:image/png;base64,{data.encode('base64').decode()}");
+            background-size: 300px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;
+            opacity: 0.1;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Call background (replace with your actual logo file path)
+if os.path.exists("logo.png"):  # <-- ensure you have your logo saved as logo.png
+    import base64
+    with open("logo.png", "rb") as f:
+        encoded_logo = base64.b64encode(f.read()).decode()
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background: url("data:image/png;base64,{encoded_logo}") no-repeat center;
+            background-size: 350px;
+            background-attachment: fixed;
+            opacity: 0.15;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
 st.title("🧬 HBV Detection App")
 st.write("Upload a medical image (DICOM, PNG, JPG, or JPEG) to get a prediction.")
 
@@ -44,14 +83,13 @@ threshold = st.sidebar.slider("Prediction Threshold", 0.1, 0.9, 0.5, 0.05)
 def preprocess_image(image, H, W, C):
     img = np.array(image)
 
-    # Convert to grayscale if model expects 1 channel
-    if C == 1:
+    if C == 1:  # grayscale model
         if len(img.shape) == 3 and img.shape[-1] == 3:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         img = cv2.resize(img, (W, H))
         img = img.astype("float32") / 255.0
         img = np.expand_dims(img, axis=-1)
-    else:  # 3-channel RGB
+    else:  # RGB model
         if len(img.shape) == 2:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
         img = cv2.resize(img, (W, H))
@@ -112,32 +150,26 @@ if page == "Home":
     if uploaded_file is not None:
         file_type = uploaded_file.name.split(".")[-1].lower()
 
-        # Handle DICOM
         if file_type == "dcm":
             dicom = pydicom.dcmread(uploaded_file)
             img_array = dicom.pixel_array
             st.image(img_array, caption="Uploaded DICOM Image", use_container_width=True, clamp=True)
         else:
-            # Regular image
             image = Image.open(uploaded_file).convert("RGB")
             img_array = np.array(image)
             st.image(img_array, caption="Uploaded Image", use_container_width=True, clamp=True)
 
-        # Preprocess & Predict
         x = preprocess_image(img_array, H, W, C)
         label, prob, raw = safe_predict(model, x, threshold=threshold)
 
-        # Debug Info
         st.write("🔎 Debug Info:")
         st.write("- Processed shape:", x.shape)
         st.write("- Pixel range:", x.min(), "to", x.max())
         st.write("- Raw model output:", raw)
 
-        # Results
         st.write(f"### 🩺 Prediction: **{label}**")
         st.write(f"Confidence: **{prob:.4f}** (Threshold = {threshold})")
 
-        # Notes
         notes = st.text_area("📝 Add notes for this case (optional)")
         if st.button("💾 Save Result"):
             save_result(uploaded_file.name, label, prob, raw, notes)
@@ -167,12 +199,19 @@ elif page == "Gallery":
 elif page == "About":
     st.subheader("ℹ️ About This App")
     st.write("""
-    This app is designed for **HBV detection** using a trained CNN model.  
-    - Supports **DICOM, PNG, JPG, JPEG** images  
-    - Preprocesses images automatically  
-    - Allows you to adjust **threshold** for classification  
-    - Saves results with notes for later review  
+    This HBV Detection App was developed as part of a research project to apply 
+    **deep learning (CNN models)** for the detection of **Hepatitis B Virus (HBV)** from 
+    medical imaging data.  
 
-    ⚠️ Disclaimer: This app is for research and educational purposes only.  
-    It is **not a substitute** for professional medical advice or diagnosis.
+    ✅ Key Features:  
+    - Upload and analyze **DICOM or common image formats (PNG, JPG, JPEG)**  
+    - Automatic preprocessing of medical images (resizing, normalization, grayscale conversion)  
+    - Configurable **prediction threshold** for classification tuning  
+    - Save results with custom notes for research or clinical documentation  
+    - Review past predictions in a built-in **gallery system**  
+
+    ⚠️ Disclaimer:  
+    This tool is intended **for research and educational purposes only**.  
+    It is **not certified for clinical or diagnostic use**. Always consult a licensed medical professional 
+    for health-related decisions.  
     """)

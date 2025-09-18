@@ -1,4 +1,4 @@
-# app.py# app.py
+# app.py
 import os
 import json
 import uuid
@@ -13,79 +13,7 @@ import pandas as pd
 from datetime import datetime
 import pytz
 import gdown
-
-
 from tensorflow.keras.models import load_model
-
-model_path = "cnn_model.h5"  # relative path
-if os.path.exists(model_path):
-    model = load_model(model_path)
-    st.success("✅ Model loaded successfully!")
-else:
-    st.error("❌ Model file not found!")
-
-
-
-####
-
-# Assuming you already have your preprocessed image as `img_array`
-
-prediction = model.predict(img_array)
-
-# Debugging: show the raw output
-st.write("🔍 Raw prediction output:", prediction)
-
-# If prediction is a probability for binary classification
-prob = prediction[0][0] if prediction.ndim > 1 else prediction[0]
-
-# Apply threshold (strictly > 0.5 means Positive)
-if prob > 0.5:
-    result = "Positive"
-else:
-    result = "Negative"
-
-st.write(f"Prediction: {result} (confidence: {prob:.4f})")
-
-
-
-
-# ... earlier parts of code ...
-
-# CONFIG (modified)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "cnn_model.h5")
-
-# Google Drive URL (fuzzy or direct)
-GDRIVE_LINK = "https://drive.google.com/file/d/1IW30NLnaspApbBo9E6q3iFsw0FEMkx16/view?usp=drive_link"
-# or direct
-GDRIVE_DIRECT = "https://drive.google.com/uc?export=download&id=1IW30NLnaspApbBo9E6q3iFsw0FEMkx16"
-
-# Download model if it doesn't exist
-if not os.path.exists(MODEL_PATH):
-    st.info("Downloading model from Google Drive...")
-    # You can use fuzzy for the shared link form
-    gdown.download(GDRIVE_LINK, MODEL_PATH, fuzzy=True, quiet=False)
-    # Or use direct if needed
-    # gdown.download(GDRIVE_DIRECT, MODEL_PATH, quiet=False)
-
-# Now load the model
-from tensorflow.keras.models import load_model
-
-def load_mslbp_model(path: str):
-    try:
-        model = load_model(path)
-        return model, None
-    except Exception as e:
-        return None, str(e)
-
-model, model_err = load_mslbp_model(MODEL_PATH)
-
-# … rest of your code …
-
-
-
-
-
 
 # ==============================
 # CONFIG
@@ -96,6 +24,16 @@ RESULTS_DIR = os.path.join(BASE_DIR, "processed")
 LOGO_PATH = os.path.join(BASE_DIR, "logo.png")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(RESULTS_DIR, exist_ok=True)
+
+MODEL_PATH = os.path.join(BASE_DIR, "cnn_model.h5")
+
+# Google Drive link (for backup download)
+GDRIVE_LINK = "https://drive.google.com/file/d/1IW30NLnaspApbBo9E6q3iFsw0FEMkx16/view?usp=drive_link"
+
+# Download model if not exists
+if not os.path.exists(MODEL_PATH):
+    st.info("📥 Downloading model from Google Drive...")
+    gdown.download(GDRIVE_LINK, MODEL_PATH, fuzzy=True, quiet=False)
 
 # ==============================
 # STREAMLIT CONFIG
@@ -138,7 +76,6 @@ def load_mslbp_model(path: str):
     except Exception as e:
         return None, str(e)
 
-MODEL_PATH = os.path.join(BASE_DIR, "cnn_model.h5")
 model, model_err = load_mslbp_model(MODEL_PATH)
 
 def get_model_input_hwc(keras_model):
@@ -167,24 +104,37 @@ def load_regular_image(file, channels=1):
     img = img.convert("L") if channels==1 else img.convert("RGB")
     return np.array(img)
 
-def prepare_for_model(img, H, W, C):
-    if C==1:
-        if img.ndim==3:
+# ==============================
+# PREPROCESS & PREDICT (fixed)
+# ==============================
+def preprocess_image(image, H, W, C):
+    img = np.array(image)
+
+    # Convert to grayscale if model expects 1 channel
+    if C == 1:
+        if len(img.shape) == 3 and img.shape[-1] == 3:
             img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        img = cv2.resize(img, (W,H))
-        x = img.astype(np.float32)/255.0
-        x = np.expand_dims(x,-1)
-    else:
-        if img.ndim==2: img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-        img = cv2.resize(img, (W,H))
-        x = img.astype(np.float32)/255.0
-    return np.expand_dims(x,0)
+        img = cv2.resize(img, (W, H))
+        img = img.astype("float32") / 255.0
+        img = np.expand_dims(img, axis=-1)
+    else:  # 3-channel RGB
+        if len(img.shape) == 2:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        img = cv2.resize(img, (W, H))
+        img = img.astype("float32") / 255.0
 
-def safe_predict(model, x):
-    y = model.predict(x)
-    y = np.array(y)
-    return float(y.flatten()[0])
+    # Add batch dimension
+    return np.expand_dims(img, axis=0)
 
+def safe_predict(model, img_array, threshold=0.7):
+    raw = model.predict(img_array)
+    prob = float(raw.flatten()[0])
+    label = "HBV Positive 🟥" if prob >= threshold else "HBV Negative 🟩"
+    return label, prob, raw
+
+# ==============================
+# SAVE RESULTS
+# ==============================
 def save_result_preview_and_json(img_disp, result, base_name):
     png_path = os.path.join(RESULTS_DIR, f"{base_name}.png")
     json_path = os.path.join(RESULTS_DIR, f"{base_name}.json")
@@ -213,7 +163,7 @@ menu = st.sidebar.radio("Navigation", ["Home", "Gallery", "About"])
 # HOME PAGE
 # ==============================
 if menu=="Home":
-    st.markdown("<div class='header'><b>APPLICATION FOR DETECTING HEPATITIS B VIRUS USING MSLBP-CNN<b/></div>", unsafe_allow_html=True)
+    st.markdown("<div class='header'><b>🧬APPLICATION FOR DETECTING HEPATITIS B VIRUS USING MSLBP-CNN<b/></div>", unsafe_allow_html=True)
     if os.path.exists(LOGO_PATH): st.image(LOGO_PATH, width=120)
     st.markdown("<div class='subheader'>Welcome to the MSLBP-CNN HBV Detection System</div>", unsafe_allow_html=True)
     st.write("Upload **DICOM** or **Image** files for HBV detection.")
@@ -252,9 +202,9 @@ if menu=="Home":
                     st.subheader(f"🖼 Image Preview - {file.name}")
                     st.image(img_uint8, caption=file.name, use_container_width=True)
 
-                x = prepare_for_model(img_uint8,H,W,C)
-                prob = safe_predict(model,x)
-                label = "HBV Positive" if prob>=0.5 else "HBV Negative"
+                # Preprocess & predict
+                x = preprocess_image(img_uint8, H, W, C)
+                label, prob, raw = safe_predict(model, x, threshold=0.7)
 
                 # Prediction card
                 st.markdown(
@@ -262,7 +212,13 @@ if menu=="Home":
                     unsafe_allow_html=True
                 )
 
-                # Note & buttons card
+                # Debugging info
+                st.write("🔎 Debug Info:")
+                st.write("- Raw model output:", raw)
+                st.write("- Input shape:", x.shape)
+                st.write("- Pixel range:", x.min(), "to", x.max())
+
+                # Note & save/delete
                 st.markdown("<div class='note-card'>", unsafe_allow_html=True)
                 note = st.text_area("📝 Leave a note about this prediction", key=f"note_{file_id}", height=80)
                 result_payload = {
@@ -310,7 +266,6 @@ elif menu=="Gallery":
             png_path = os.path.join(RESULTS_DIR,res["file_name"].split(".")[0]+".png")
             if os.path.exists(png_path): st.image(png_path,use_container_width=True)
             st.markdown("---")
-            # Prepare CSV
             row = {"file_name":res.get("file_name",""), "prediction":res.get("label",""), "confidence":res.get("confidence","")}
             metadata = res.get("metadata",{})
             for k,v in metadata.items(): row[k]=v
@@ -320,13 +275,10 @@ elif menu=="Gallery":
         st.download_button("📥 Download CSV of Gallery", df.to_csv(index=False).encode("utf-8"), file_name="gallery.csv")
 
 # ==============================
-# ==============================
-# ABOUT PAGE (fixed & polished)
+# ABOUT PAGE
 # ==============================
 elif menu == "About":
     st.markdown("<div class='header'>About This Project</div>", unsafe_allow_html=True)
-
-    # Top section with logo on the right
     col_left, col_right = st.columns([3, 1])
     with col_left:
         st.markdown("""
@@ -341,7 +293,6 @@ elif menu == "About":
 This project develops an advanced deep learning framework (**MSLBP-CNN**) for **Hepatitis B Virus (HBV)** detection from medical images.  
 We combine **Multi-Scale Local Binary Patterns (MSLBP)** for robust texture encoding with a **Convolutional Neural Network (CNN)** for classification, aiming to improve **sensitivity**, **accuracy**, and **training efficiency** for liver imaging–based diagnosis.
         """)
-
     with col_right:
         if os.path.exists(LOGO_PATH):
             st.image(LOGO_PATH, use_container_width=True)
@@ -366,11 +317,6 @@ We combine **Multi-Scale Local Binary Patterns (MSLBP)** for robust texture enco
 - **MSLBP** captures fine-grained liver textures that can be subtle in HBV-related pathology.  
 - **CNN** learns hierarchical patterns and decision boundaries from the texture-enhanced inputs.  
 - The hybrid improves **discriminative power** and can reduce **training time** versus CNN-only pipelines.
-
 """)
 
     st.markdown("<div class='footer'>© 2025 Tolorunju Adedeji | MSc Project</div>", unsafe_allow_html=True)
-
-
-
-

@@ -12,7 +12,12 @@ import datetime
 # ==============================
 # APP CONFIG
 # ==============================
-st.set_page_config(page_title="HBV Detection App", 
+ st.set_page_config(
+    page_title="HBV Detection App",
+    page_icon="🧬",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Call background (replace with your actual logo file path)
 if os.path.exists("logo.png"):  # <-- ensure you have your logo saved as logo.png
@@ -195,4 +200,5 @@ elif page == "About":
     It is **not certified for clinical or diagnostic use**. Always consult a licensed medical professional 
     for health-related decisions.  
     """)
+
 

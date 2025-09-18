@@ -14,6 +14,22 @@ from datetime import datetime
 import pytz
 import gdown
 
+
+from tensorflow.keras.models import load_model
+
+model_path = "cnn_model.h5"  # relative path
+if os.path.exists(model_path):
+    model = load_model(model_path)
+    st.success("✅ Model loaded successfully!")
+else:
+    st.error("❌ Model file not found!")
+
+
+
+
+
+
+
 # ... earlier parts of code ...
 
 # CONFIG (modified)
@@ -335,5 +351,6 @@ We combine **Multi-Scale Local Binary Patterns (MSLBP)** for robust texture enco
 """)
 
     st.markdown("<div class='footer'>© 2025 Tolorunju Adedeji | MSc Project</div>", unsafe_allow_html=True)
+
 
 

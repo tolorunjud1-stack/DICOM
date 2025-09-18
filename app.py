@@ -26,6 +26,25 @@ else:
 
 
 
+####
+
+# Assuming you already have your preprocessed image as `img_array`
+
+prediction = model.predict(img_array)
+
+# Debugging: show the raw output
+st.write("🔍 Raw prediction output:", prediction)
+
+# If prediction is a probability for binary classification
+prob = prediction[0][0] if prediction.ndim > 1 else prediction[0]
+
+# Apply threshold (strictly > 0.5 means Positive)
+if prob > 0.5:
+    result = "Positive"
+else:
+    result = "Negative"
+
+st.write(f"Prediction: {result} (confidence: {prob:.4f})")
 
 
 
@@ -351,6 +370,7 @@ We combine **Multi-Scale Local Binary Patterns (MSLBP)** for robust texture enco
 """)
 
     st.markdown("<div class='footer'>© 2025 Tolorunju Adedeji | MSc Project</div>", unsafe_allow_html=True)
+
 
 
 

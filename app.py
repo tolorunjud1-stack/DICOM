@@ -320,7 +320,7 @@ We combine **Multi-Scale Local Binary Patterns (MSLBP)** for robust texture enco
 """)
 
     st.markdown("<div class='footer'>© 2025 Tolorunju Adedeji | MSc Project</div>", unsafe_allow_html=True)        unsafe_allow_html=True
-    )
+ 
 
 st.title("🧬 HBV Detection App")
 st.write("Upload a medical image (DICOM, PNG, JPG, or JPEG) to get a prediction.")
@@ -484,6 +484,7 @@ elif page == "About":
     It is **not certified for clinical or diagnostic use**. Always consult a licensed medical professional 
     for health-related decisions.  
     """)
+
 
 
 

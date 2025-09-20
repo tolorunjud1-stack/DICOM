@@ -2,27 +2,29 @@ import streamlit as st
 import pydicom
 import numpy as np
 import cv2
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from PIL import Image
 
-st.set_page_config(page_title="HBV Detection App", page_icon="🧬", layout="centered")
-
-st.title("🧬 HBV Detection App")
+st.title("🧬 HBV Detection App (Debug Mode)")
 st.write("Upload a medical image (DICOM, PNG, JPG, or JPEG) to get a prediction.")
 
 # Load the trained model
 @st.cache_resource
 def load_cnn_model():
-    return load_model("cnn_model.h5")
+    model = load_model("cnn_model.h5")
+    return model
 
 model = load_cnn_model()
 st.success("✅ Model loaded successfully!")
+st.write("📌 Model input shape:", model.input_shape)
 
 # Preprocess the image before prediction
 def preprocess_image(image):
+    # Ensure input is numpy
     img = np.array(image)
 
-    # Convert RGB → grayscale if needed
+    # If already grayscale (2D), skip conversion
     if len(img.shape) == 3 and img.shape[-1] == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -51,18 +53,26 @@ if uploaded_file is not None:
         st.image(img_array, caption="Uploaded DICOM Image", use_container_width=True, clamp=True)
     else:
         # Handle regular image files
-        image = Image.open(uploaded_file).convert("L")
+        image = Image.open(uploaded_file).convert("L")  # force grayscale
         img_array = np.array(image)
         st.image(img_array, caption="Uploaded Image", use_container_width=True, clamp=True)
 
     # Preprocess and predict
     processed_img = preprocess_image(img_array)
+
+    # Debugging info
+    st.write("🔎 Debug Info:")
+    st.write("- Processed shape:", processed_img.shape)
+    st.write("- Pixel range:", processed_img.min(), "to", processed_img.max())
+
+    # Prediction
     prediction = model.predict(processed_img)
     prob = prediction[0][0] if prediction.ndim > 1 else prediction[0]
 
-    # Prediction result
+    st.write("- Raw model output:", prediction)
+
+    # Adjusted threshold
     result = "HBV Positive 🟥" if prob > 0.7 else "HBV Negative 🟩"
 
-    st.subheader("🔬 Prediction Result")
-    st.write(f"**{result}**")
+    st.write(f"### 🩺 Prediction: **{result}**")
     st.write(f"Confidence: **{prob:.4f}**")
